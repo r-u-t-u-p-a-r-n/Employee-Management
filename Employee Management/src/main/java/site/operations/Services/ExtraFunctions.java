@@ -136,6 +136,8 @@ public interface ExtraFunctions
         			b = false ;
                     assetsData.setPrice("Price should be positive");
                 }
+                else
+                    assetsData.setPrice(""+i);
         	}
 
         	catch(Exception e)
@@ -206,6 +208,8 @@ public interface ExtraFunctions
                 i = Integer.parseInt(employeeData.getAge());
                 if(!(i>=21 && i<=60))
                     { employeeData.setAge("Age is not suitable"); b = false ; }
+                else
+                    employeeData.setAge(""+i);
             }
 
             catch(Exception e)
@@ -225,6 +229,8 @@ public interface ExtraFunctions
                 i = Integer.parseInt(employeeData.getJoined());
                 if(!(i>=2015 && i<=2022))
                     { employeeData.setJoined("Year is not suitable");  b = false ; }
+                else
+                    employeeData.setJoined(""+i);
             }
 
             catch(Exception e)
@@ -244,6 +250,8 @@ public interface ExtraFunctions
                 i = Integer.parseInt(employeeData.getSalary());
                 if(!(i>=1000 && i<=5000000))
                     { employeeData.setSalary("Salary is not suitable"); b = false ; }
+                else
+                    employeeData.setSalary(""+i);
             }
 
             catch(Exception e)
