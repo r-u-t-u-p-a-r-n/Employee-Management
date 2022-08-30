@@ -34,7 +34,7 @@ public class BasicController
     @GetMapping("/org")
     public OrgData getOrgDetails()
     {
-        return basicServices.getOrgData2();
+        return basicServices.getOrgData();
     }
 
     @GetMapping("/login")

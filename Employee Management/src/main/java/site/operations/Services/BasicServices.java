@@ -9,7 +9,7 @@ import java.util.List;
 public interface BasicServices
 {
 	public List<AssetsData> getAssetsData(String id);
-	public OrgData getOrgData2();
+	public OrgData getOrgData();
 	public EmployeeData getEmployeeProfile();
 	public BasicAuth getLoginInfo();
 	public BasicAuth updateLoginInfo(BasicAuth basicAuth);

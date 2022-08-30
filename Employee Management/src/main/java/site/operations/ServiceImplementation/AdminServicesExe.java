@@ -56,7 +56,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
     		b = false ;
     	}
 
-        employeeData.setOrganizationId(getOrgId());
+        employeeData.setOrganizationDetails(getOrgData());
         employeeData.setRole("EMPLOYEE");
         employeeData = ExtraFunctions.checkEmployeeValidity(employeeData,employeeRepo);
         if(b && !(checkId(employeeData.getEmployeeId())))
@@ -93,7 +93,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
                 List<EmployeeData> L0 = employeeRepo.findAll();
                 for(EmployeeData E : L0)
                 {
-                    if(E.getOrganizationId().equals(getOrgId()))
+                    if(E.getOrganizationDetails().equals(getOrgData()))
                         L.add(E);
                     i++ ;
                 }
@@ -106,7 +106,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
             try
             {
                 ED = employeeRepo.findById(str).orElseThrow(Exception::new);
-                if(!(ED.getOrganizationId().equals(getOrgId())))
+                if(!(ED.getOrganizationDetails().equals(getOrgData())))
                     throw new Exception();
             }
 
@@ -140,7 +140,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
                     {
                         for(EmployeeData E : L0)
 			        	{
-			        		if(E.getOrganizationId().equals(getOrgId()))
+			        		if(E.getOrganizationDetails().equals(getOrgData()))
 			        			L.add(E);
 			        	}
                     }
@@ -149,7 +149,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
                     	L0 = ExtraFunctions.getPropertyData(L0,property) ;
 					    for(EmployeeData E : L0)
 						{
-							if(E.getOrganizationId().equals(getOrgId()))
+							if(E.getOrganizationDetails().equals(getOrgData()))
                                 L.add(E);
 						}
                     }
@@ -173,7 +173,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
             if(employeeData.getEmployeeId()==null)
                 employeeData.setEmployeeId(ED.getEmployeeId());
 
-            if(!(ED.getOrganizationId().equals(getOrgId())))
+            if(!(ED.getOrganizationDetails().equals(getOrgData())))
             	throw new Exception();
 
             if(employeeData.getName()==null)
@@ -227,7 +227,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
             }
 
             employeeData.setRole(ED.getRole());
-            employeeData.setOrganizationId(ED.getOrganizationId());
+            employeeData.setOrganizationDetails(ED.getOrganizationDetails());
             employeeData = ExtraFunctions.checkEmployeeValidity(employeeData,employeeRepo);
             return new ResponseEntity<EmployeeData>(employeeData,HttpStatus.OK);
         }
@@ -251,7 +251,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
     		assetsData.setAssetId(null);
     		b = false ;
     	}
-        assetsData.setOrganizationId(getOrgId());
+        assetsData.setOrganizationDetails(getOrgData());
         assetsData = ExtraFunctions.checkAssetsValidity(assetsData,assetsRepo);
         if(b && !(checkId(assetsData.getAssetId())))
         	return new ResponseEntity<AssetsData> (assetsData,HttpStatus.CREATED);
@@ -274,7 +274,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
     	{
     		A = assetsRepo.findById(id).orElseThrow(Exception::new);
     		
-    		if(!(A.getOrganizationId().equals(getOrgId())))
+    		if(!(A.getOrganizationDetails().equals(getOrgData())))
     			throw new Exception();
 
     		if(assetsData.getName() == null || assetsData.getName().length() == 0)
@@ -303,7 +303,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
 
 /*--------------------------------------------------------------------------------------------------*/
 
-    private final String getOrgId()
+    private final OrgData getOrgData()
     {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         List<BasicAuth> L0 = basicAuthRepository.findAll();
@@ -312,17 +312,22 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
             if(BA.getEmail().equals(auth.getName()))
             {
                 List<OrgData> L1 = orgRepo.findAll();
-                for(OrgData OD : L1)
+                for(OrgData OG : L1)
                 {
-                    if(OD.getOrgId().equals(BA.getUserId()))
-                        return OD.getOrgId() ;
+                    if(OG.getOrgId().equals(BA.getUserId()))
+                        return OG ;
                 }
-
                 List<EmployeeData> L2 = employeeRepo.findAll();
                 for(EmployeeData ED : L2)
                 {
                     if(ED.getEmployeeId().equals(BA.getUserId()))
-                        return ED.getOrganizationId() ;
+                    {
+                        for(OrgData OG : L1)
+                        {
+                            if(OG.equals(ED.getOrganizationDetails()))
+                                return OG ;
+                        }
+                    }
                 }
             }
         }

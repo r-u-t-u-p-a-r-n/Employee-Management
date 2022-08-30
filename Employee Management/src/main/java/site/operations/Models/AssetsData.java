@@ -20,6 +20,7 @@ public class AssetsData
 	@Column(nullable=false)
 	private String price ;
 
-	@Column(nullable=false)
-	private String organizationId ;
+	@ManyToOne
+	@JoinColumn
+	private OrgData organizationDetails ;
 }

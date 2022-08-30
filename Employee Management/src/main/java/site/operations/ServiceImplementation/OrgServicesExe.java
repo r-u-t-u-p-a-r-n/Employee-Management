@@ -79,13 +79,13 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
 			List<EmployeeData> E = employeeRepo.findAll();
 			for(EmployeeData ED : E)
 			{
-				if(ED.getOrganizationId().equals(orgData.getOrgId()))
+				if(ED.getOrganizationDetails().equals(orgData))
 					employeeRepo.deleteById(ED.getEmployeeId());
 			}
 			List<AssetsData> A = assetsRepo.findAll();
 			for(AssetsData AD : A)
 			{
-				if(AD.getOrganizationId().equals(orgData.getOrgId()))
+				if(AD.getOrganizationDetails().equals(orgData))
 					assetsRepo.deleteById(AD.getAssetId());
 			}
 			basicAuthRepository.deleteById(orgData.getOrgId());
@@ -128,7 +128,7 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
 	            try
 	            {
 	            	Emp = employeeRepo.findById(v).orElseThrow(Exception::new);
-	            	if(!(Emp.getOrganizationId().equals(orgData.getOrgId())))
+	            	if(!(Emp.getOrganizationDetails().equals(orgData)))
 	                    throw new Exception();
 	            	basicAuthRepository.deleteById(v);
 	                employeeRepo.deleteById(v);
@@ -161,7 +161,7 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
 	            try
 	            {
 	                AD = assetsRepo.findById(v).orElseThrow(Exception::new);
-	                if(!(AD.getOrganizationId().equals(orgData.getOrgId())))
+	                if(!(AD.getOrganizationDetails().equals(orgData)))
 	                    throw new Exception();
 	                
 	              	assetsRepo.deleteById(v);

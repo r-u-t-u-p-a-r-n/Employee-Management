@@ -35,6 +35,7 @@ public class EmployeeData
 	@Column(nullable=false)
 	private String role ;
 
-	@Column(nullable=false)
-	private String organizationId ;
+	@ManyToOne
+	@JoinColumn
+	private OrgData organizationDetails ;
 }

@@ -40,7 +40,7 @@ public class BasicImpl implements BasicServices,ExtraFunctions
 	}
 
     @Override
-	public OrgData getOrgData2()
+    public OrgData getOrgData()
 	{
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 		List<BasicAuth> L0 = basicAuthRepository.findAll();
@@ -61,7 +61,7 @@ public class BasicImpl implements BasicServices,ExtraFunctions
 					{
 						for(OrgData OG : L1)
 						{
-							if(OG.getOrgId().equals(ED.getOrganizationId()))
+							if(OG.equals(ED.getOrganizationDetails()))
 								return OG ;
 						}
 					}
@@ -71,52 +71,6 @@ public class BasicImpl implements BasicServices,ExtraFunctions
 
 		return null ;
 	}
-
-	private final EmployeeData getEmployeeDetails()
-    {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        List<BasicAuth> L0 = basicAuthRepository.findAll();
-        for(BasicAuth BA : L0)
-        {
-            if(BA.getEmail().equals(auth.getName()))
-            {
-                List<EmployeeData> L1 = employeeRepo.findAll();
-                for(EmployeeData ED : L1)
-                {
-                    if(ED.getEmployeeId().equals(BA.getUserId()))
-                        return ED ;
-                }
-            }
-        }
-        return null ;
-    }
-
-    private final String getOrgId()
-    {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        List<BasicAuth> L0 = basicAuthRepository.findAll();
-        for(BasicAuth BA : L0)
-        {
-            if(BA.getEmail().equals(auth.getName()))
-            {
-                List<OrgData> L1 = orgRepo.findAll();
-                for(OrgData OD : L1)
-                {
-                    if(OD.getOrgId().equals(BA.getUserId()))
-                        return OD.getOrgId() ;
-                }
-
-                List<EmployeeData> L2 = employeeRepo.findAll();
-                for(EmployeeData ED : L2)
-                {
-                    if(ED.getEmployeeId().equals(BA.getUserId()))
-                        return ED.getOrganizationId() ;
-                }
-            }
-        }
-
-        return null ;
-    }
 
 	@Override
 	public BasicAuth getLoginInfo()
@@ -156,7 +110,7 @@ public class BasicImpl implements BasicServices,ExtraFunctions
 	        	List<AssetsData> L0 = assetsRepo.findAll();
 	        	for(AssetsData A : L0)
 	        	{
-	        		if(A.getOrganizationId().equals(getOrgId()))
+	        		if(A.getOrganizationDetails().equals(getOrgData()))
 	        			L.add(A);
 	        	}
 	        	return L ;
@@ -169,7 +123,7 @@ public class BasicImpl implements BasicServices,ExtraFunctions
 	        try
 	        {
 	            AD = assetsRepo.findById(str).orElseThrow(Exception::new);
-	            if(!(AD.getOrganizationId().equals(getOrgId())))
+	            if(!(AD.getOrganizationDetails().equals(getOrgData())))
 	            	throw new Exception();
 	        }
 
@@ -187,7 +141,21 @@ public class BasicImpl implements BasicServices,ExtraFunctions
     @Override
     public EmployeeData getEmployeeProfile()
     {
-    	return getEmployeeDetails();
+    	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        List<BasicAuth> L0 = basicAuthRepository.findAll();
+        for(BasicAuth BA : L0)
+        {
+            if(BA.getEmail().equals(auth.getName()))
+            {
+                List<EmployeeData> L1 = employeeRepo.findAll();
+                for(EmployeeData ED : L1)
+                {
+                    if(ED.getEmployeeId().equals(BA.getUserId()))
+                        return ED ;
+                }
+            }
+        }
+        return null ;
     }
 
     public PasswordEncoder passwordEncoder()
