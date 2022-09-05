@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 @Service
-public class OrgServicesExe implements OrgServices,ExtraFunctions
+public class OrgServicesExe implements OrgServices
 {
 	@Autowired
 	private EmployeeRepo employeeRepo ;
@@ -30,14 +30,11 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
 	@Autowired
 	private OrgRepo orgRepo ;
 
-	public OrgServicesExe(BasicAuthRepository basicAuthRepository, OrgRepo orgRepo,
-		                  EmployeeRepo employeeRepo, AssetsRepo assetsRepo)
-	{
-		this.basicAuthRepository = basicAuthRepository ;
-		this.orgRepo = orgRepo ;
-		this.employeeRepo = employeeRepo ;
-		this.assetsRepo = assetsRepo ;
-	}
+	@Autowired
+    private PasswordEncoder passwordEncoder ;
+
+	@Autowired
+    private ExtraFunctions EF ;
 
 	@Override
 	public ResponseEntity<OrgData> addNewOrg(OrgData orgData)
@@ -54,7 +51,7 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
 			return new ResponseEntity<OrgData> (orgData,HttpStatus.BAD_REQUEST);
 		}
 
-		if(!(checkId(orgData.getOrgId())))
+		if(!(EF.checkId(orgData.getOrgId())))
 		{
 			orgData.setOrgId("Id \'"+orgData.getOrgId()+"\' already exists");
 			return new ResponseEntity<OrgData> (orgData,HttpStatus.BAD_REQUEST);
@@ -63,7 +60,7 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
 		BasicAuth BA = new BasicAuth();
 		BA.setUserId(orgData.getOrgId());
 		BA.setEmail(orgData.getOrgId()+"@myapi");
-		BA.setPassword(passwordEncoder().encode(orgData.getOrgId()));
+		BA.setPassword(passwordEncoder.encode(orgData.getOrgId()));
 		BA.setRole("ORG");
 		basicAuthRepository.save(BA);
 
@@ -73,14 +70,17 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
 	@Override
 	public ResponseEntity<String> deleteOrgData()
 	{
-		OrgData orgData = getOrgDetails();
+		OrgData orgData = EF.getOrgData();
 		if(orgData != null)
 		{
 			List<EmployeeData> E = employeeRepo.findAll();
 			for(EmployeeData ED : E)
 			{
 				if(ED.getOrganizationDetails().equals(orgData))
+				{
+					basicAuthRepository.deleteById(ED.getEmployeeId());
 					employeeRepo.deleteById(ED.getEmployeeId());
+				}
 			}
 			List<AssetsData> A = assetsRepo.findAll();
 			for(AssetsData AD : A)
@@ -99,7 +99,7 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
 	@Override
 	public ResponseEntity<OrgData> updateOrgData(OrgData orgData)
 	{		
-		OrgData OD = getOrgDetails();
+		OrgData OD = EF.getOrgData();
 		if(OD != null)
 		{
 			if(orgData.getName() == null || orgData.getName().length() == 0)
@@ -117,10 +117,10 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
 	@Override
     public List<String> deleteEmployeeData(String id)
     {
-        OrgData orgData = getOrgDetails();
+        OrgData orgData = EF.getOrgData();
         List<String> LR = new <String>ArrayList();
         EmployeeData Emp ;
-        Set<String> values = ExtraFunctions.getValues(id,',');
+        Set<String> values = EF.getValues(id,',');
         if(orgData!=null)
         {
 	        for(String v : values)
@@ -151,9 +151,9 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
     {
         AssetsData AD ;
         List<String> LR = new ArrayList<String>();
-        Set<String> values = ExtraFunctions.getValues(id,',');
+        Set<String> values = EF.getValues(id,',');
         
-        OrgData orgData = getOrgDetails();
+        OrgData orgData = EF.getOrgData();
         if(orgData!=null)
         {
 	        for(String v : values)
@@ -181,58 +181,4 @@ public class OrgServicesExe implements OrgServices,ExtraFunctions
     }
 
 /*---------------------------------------------------------------------------------------------*/
-
-	private final OrgData getOrgDetails()
-	{
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		OrgData orgData = null ;
-		List<BasicAuth> L = basicAuthRepository.findAll();
-		for(BasicAuth BA : L)
-		{
-			if(BA.getEmail().equals(auth.getName()))
-			{
-				try
-				{
-					return orgRepo.findById(BA.getUserId()).orElseThrow(Exception::new) ;
-				}
-
-				catch(Exception e) {}
-			}
-		}
-
-		return null ;
-	}
-
-	private final boolean checkId(String id)
-	{
-		List<OrgData> L0 = orgRepo.findAll();
-		for(OrgData OD : L0)
-		{
-			if(id.equals(OD.getOrgId()))
-				return false ;
-		}
-
-		List<EmployeeData> L1 = employeeRepo.findAll();
-		for(EmployeeData ED : L1)
-		{
-			if(id.equals(ED.getEmployeeId()))
-				return false ;
-		}
-
-		List<AssetsData> L2 = assetsRepo.findAll();
-		for(AssetsData AD : L2)
-		{
-			if(id.equals(AD.getAssetId()))
-				return false ;
-		}
-		
-		return true ;
-	}
-
-/*---------------------------------------------------------------------------------------------*/
-
-	private final PasswordEncoder passwordEncoder()
-    {
-        return new BCryptPasswordEncoder();
-    }
 }

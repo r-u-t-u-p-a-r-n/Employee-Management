@@ -1,6 +1,7 @@
     package site.operations.Config;
 
 import site.operations.Security.BasicAuthDetails;
+import site.operations.Services.ExtraFunctions;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -48,9 +49,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
     auth.userDetailsService(this.basicAuthDetails).passwordEncoder(passwordEncoder());
     }
+    
     @Bean
     public PasswordEncoder passwordEncoder()
     {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public ExtraFunctions getExtraFunctions()
+    {
+        ExtraFunctions extraFunctions = new ExtraFunctions();
+        return extraFunctions ;
     }
 }

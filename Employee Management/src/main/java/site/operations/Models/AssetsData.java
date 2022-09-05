@@ -21,6 +21,5 @@ public class AssetsData
 	private String price ;
 
 	@ManyToOne
-	@JoinColumn
 	private OrgData organizationDetails ;
 }

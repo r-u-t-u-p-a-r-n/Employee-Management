@@ -17,7 +17,7 @@ import java.util.HashSet;
 import java.util.ArrayList;
 
 @Service
-public class AdminServicesExe implements AdminServices,ExtraFunctions
+public class AdminServicesExe implements AdminServices
 {
 	@Autowired
 	private EmployeeRepo employeeRepo ;
@@ -31,47 +31,39 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
 	@Autowired
 	private OrgRepo orgRepo ;
 
-	public AdminServicesExe(BasicAuthRepository basicAuthRepository, OrgRepo orgRepo,
-		                  EmployeeRepo employeeRepo, AssetsRepo assetsRepo)
-	{
-		this.basicAuthRepository = basicAuthRepository ;
-		this.orgRepo = orgRepo ;
-		this.employeeRepo = employeeRepo ;
-		this.assetsRepo = assetsRepo ;
-	}
+    @Autowired
+    private PasswordEncoder passwordEncoder ;
 
-	public PasswordEncoder passwordEncoder()
-    {
-        return new BCryptPasswordEncoder();
-    }
+    @Autowired
+    private ExtraFunctions EF ;
 
 	@Override
     public ResponseEntity<EmployeeData> AddNewEmployee(EmployeeData employeeData)
     {
     	boolean b = true ;
     	String H = employeeData.getEmployeeId();
-    	if(!(checkId(H)))
+    	if(!(EF.checkId(H)))
     	{
     		employeeData.setEmployeeId(null);
     		b = false ;
     	}
 
-        employeeData.setOrganizationDetails(getOrgData());
+        employeeData.setOrganizationDetails(EF.getOrgData());
         employeeData.setRole("EMPLOYEE");
-        employeeData = ExtraFunctions.checkEmployeeValidity(employeeData,employeeRepo);
-        if(b && !(checkId(employeeData.getEmployeeId())))
+        employeeData = EF.checkEmployeeValidity(employeeData);
+        if(b && !(EF.checkId(employeeData.getEmployeeId())))
         {
         	BasicAuth BA = new BasicAuth();
 	        BA.setUserId(employeeData.getEmployeeId());
 	        BA.setEmail(employeeData.getEmployeeId()+"@myapi");
-	        BA.setPassword(passwordEncoder().encode(employeeData.getEmployeeId()));
+	        BA.setPassword(passwordEncoder.encode(employeeData.getEmployeeId()));
 	        BA.setRole("EMPLOYEE");
         	basicAuthRepository.save(BA);
             return new ResponseEntity<EmployeeData> (employeeData,HttpStatus.CREATED);
         }
         if(H!=null && H.length()!=0)
         {
-        	if(!(checkId(H)))
+        	if(!(EF.checkId(H)))
         		employeeData.setEmployeeId("Id \'"+H+"\' already exists");
         	else
         		employeeData.setEmployeeId(H);
@@ -84,7 +76,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
     public List<EmployeeData> getEmployeeData(String id)
     {
         List<EmployeeData> L = new ArrayList<EmployeeData> ();
-        Set<String> S = ExtraFunctions.getValues(id,',');
+        Set<String> S = EF.getValues(id,',');
         int i = 0 ;
         for(String str : S)
         {
@@ -93,7 +85,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
                 List<EmployeeData> L0 = employeeRepo.findAll();
                 for(EmployeeData E : L0)
                 {
-                    if(E.getOrganizationDetails().equals(getOrgData()))
+                    if(E.getOrganizationDetails().equals(EF.getOrgData()))
                         L.add(E);
                     i++ ;
                 }
@@ -106,7 +98,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
             try
             {
                 ED = employeeRepo.findById(str).orElseThrow(Exception::new);
-                if(!(ED.getOrganizationDetails().equals(getOrgData())))
+                if(!(ED.getOrganizationDetails().equals(EF.getOrgData())))
                     throw new Exception();
             }
 
@@ -125,8 +117,8 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
     @Override
     public List<EmployeeData> getEmployeeData(String id, String property)
     {
-        Set<String> idvalues = ExtraFunctions.getValues(id,','),
-        propertyValues = ExtraFunctions.getValues(property,',') ;
+        Set<String> idvalues = EF.getValues(id,','),
+        propertyValues = EF.getValues(property,',') ;
         EmployeeData Emp = new EmployeeData();
         List<EmployeeData> L = new ArrayList<EmployeeData> ();
         for(String str : idvalues)
@@ -140,16 +132,16 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
                     {
                         for(EmployeeData E : L0)
 			        	{
-			        		if(E.getOrganizationDetails().equals(getOrgData()))
+			        		if(E.getOrganizationDetails().equals(EF.getOrgData()))
 			        			L.add(E);
 			        	}
                     }
                     else
                     {
-                    	L0 = ExtraFunctions.getPropertyData(L0,property) ;
+                    	L0 = EF.getPropertyData(L0,property) ;
 					    for(EmployeeData E : L0)
 						{
-							if(E.getOrganizationDetails().equals(getOrgData()))
+							if(E.getOrganizationDetails().equals(EF.getOrgData()))
                                 L.add(E);
 						}
                     }
@@ -160,7 +152,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
             }
         }
 
-        return ExtraFunctions.getPropertyData(getEmployeeData(id),property) ;
+        return EF.getPropertyData(getEmployeeData(id),property) ;
     }
 
     @Override
@@ -173,7 +165,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
             if(employeeData.getEmployeeId()==null)
                 employeeData.setEmployeeId(ED.getEmployeeId());
 
-            if(!(ED.getOrganizationDetails().equals(getOrgData())))
+            if(!(ED.getOrganizationDetails().equals(EF.getOrgData())))
             	throw new Exception();
 
             if(employeeData.getName()==null)
@@ -211,9 +203,9 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
                 {  
                   if(BA.getRole().equals("ORG"))
                     {
-                        if(ExtraFunctions.checkCase(employeeData.getRole(),"ADMIN"))
+                        if(EF.checkCase(employeeData.getRole(),"ADMIN"))
                             ED.setRole("ADMIN");
-                        if(ExtraFunctions.checkCase(employeeData.getRole(),"EMPLOYEE"))
+                        if(EF.checkCase(employeeData.getRole(),"EMPLOYEE"))
                             ED.setRole("EMPLOYEE");
 
                         BasicAuth B = basicAuthRepository.findById(ED.getEmployeeId()).orElseThrow(Exception::new);
@@ -228,7 +220,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
 
             employeeData.setRole(ED.getRole());
             employeeData.setOrganizationDetails(ED.getOrganizationDetails());
-            employeeData = ExtraFunctions.checkEmployeeValidity(employeeData,employeeRepo);
+            employeeData = EF.checkEmployeeValidity(employeeData);
             return new ResponseEntity<EmployeeData>(employeeData,HttpStatus.OK);
         }
 
@@ -246,18 +238,18 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
     {
     	boolean b = true ;
     	String H = assetsData.getAssetId();
-    	if(!(checkId(H)))
+    	if(!(EF.checkId(H)))
     	{
     		assetsData.setAssetId(null);
     		b = false ;
     	}
-        assetsData.setOrganizationDetails(getOrgData());
-        assetsData = ExtraFunctions.checkAssetsValidity(assetsData,assetsRepo);
-        if(b && !(checkId(assetsData.getAssetId())))
+        assetsData.setOrganizationDetails(EF.getOrgData());
+        assetsData = EF.checkAssetsValidity(assetsData);
+        if(b && !(EF.checkId(assetsData.getAssetId())))
         	return new ResponseEntity<AssetsData> (assetsData,HttpStatus.CREATED);
         if(H!=null && H.length()!=0)
         {
-        	if(!(checkId(H)))
+        	if(!(EF.checkId(H)))
         		assetsData.setAssetId("Id \'"+H+"\' already exists");
         	else
         		assetsData.setAssetId(H);
@@ -274,7 +266,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
     	{
     		A = assetsRepo.findById(id).orElseThrow(Exception::new);
     		
-    		if(!(A.getOrganizationDetails().equals(getOrgData())))
+    		if(!(A.getOrganizationDetails().equals(EF.getOrgData())))
     			throw new Exception();
 
     		if(assetsData.getName() == null || assetsData.getName().length() == 0)
@@ -289,7 +281,7 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
     		A.setName(assetsData.getName());
     		A.setType(assetsData.getType());
     		A.setPrice(assetsData.getPrice());
-    		A = ExtraFunctions.checkAssetsValidity(A,assetsRepo);
+    		A = EF.checkAssetsValidity(A);
     		return new ResponseEntity<AssetsData> (A,HttpStatus.OK);
     	}
 
@@ -302,61 +294,4 @@ public class AdminServicesExe implements AdminServices,ExtraFunctions
     }
 
 /*--------------------------------------------------------------------------------------------------*/
-
-    private final OrgData getOrgData()
-    {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        List<BasicAuth> L0 = basicAuthRepository.findAll();
-        for(BasicAuth BA : L0)
-        {
-            if(BA.getEmail().equals(auth.getName()))
-            {
-                List<OrgData> L1 = orgRepo.findAll();
-                for(OrgData OG : L1)
-                {
-                    if(OG.getOrgId().equals(BA.getUserId()))
-                        return OG ;
-                }
-                List<EmployeeData> L2 = employeeRepo.findAll();
-                for(EmployeeData ED : L2)
-                {
-                    if(ED.getEmployeeId().equals(BA.getUserId()))
-                    {
-                        for(OrgData OG : L1)
-                        {
-                            if(OG.equals(ED.getOrganizationDetails()))
-                                return OG ;
-                        }
-                    }
-                }
-            }
-        }
-
-        return null ;
-    }
-
-	private final boolean checkId(String id)
-	{
-		List<OrgData> L0 = orgRepo.findAll();
-		for(OrgData OD : L0)
-		{
-			if(OD.getOrgId().equals(id))
-				return false ;
-		}
-
-		List<EmployeeData> L1 = employeeRepo.findAll();
-		for(EmployeeData ED : L1)
-		{
-			if(ED.getEmployeeId().equals(id))
-				return false ;
-		}
-
-		List<AssetsData> L2 = assetsRepo.findAll();
-		for(AssetsData AD : L2)
-		{
-			if(AD.getAssetId().equals(id))
-				return false ;
-		}
-		return true ;
-	}
 }

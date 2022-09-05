@@ -3,16 +3,88 @@ package site.operations.Services;
 import site.operations.Models.*;
 import site.operations.Repositories.*;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 
-public interface ExtraFunctions
+public class ExtraFunctions
 {
 	String columnNames[] = {"Name","Department","Position",
                             "Age","Joined","Salary","Status","role"} ;
 
-    static Set<String> getValues(String id, char c)
+    @Autowired
+    private AssetsRepo assetsRepo ;
+
+    @Autowired
+    private EmployeeRepo employeeRepo ;
+
+    @Autowired
+    private OrgRepo orgRepo ;
+
+    @Autowired
+    private BasicAuthRepository basicAuthRepository ;
+
+    public final boolean checkId(String id)
+    {
+        List<OrgData> L0 = orgRepo.findAll();
+        for(OrgData OD : L0)
+        {
+            if(OD.getOrgId().equals(id))
+                return false ;
+        }
+
+        List<EmployeeData> L1 = employeeRepo.findAll();
+        for(EmployeeData ED : L1)
+        {
+            if(ED.getEmployeeId().equals(id))
+                return false ;
+        }
+
+        List<AssetsData> L2 = assetsRepo.findAll();
+        for(AssetsData AD : L2)
+        {
+            if(AD.getAssetId().equals(id))
+                return false ;
+        }
+        return true ;
+    }
+
+    public final OrgData getOrgData()
+    {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        List<BasicAuth> L0 = basicAuthRepository.findAll();
+        for(BasicAuth BA : L0)
+        {
+            if(BA.getEmail().equals(auth.getName()))
+            {
+                List<OrgData> L1 = orgRepo.findAll();
+                for(OrgData OG : L1)
+                {
+                    if(OG.getOrgId().equals(BA.getUserId()))
+                        return OG ;
+                }
+                List<EmployeeData> L2 = employeeRepo.findAll();
+                for(EmployeeData ED : L2)
+                {
+                    if(ED.getEmployeeId().equals(BA.getUserId()))
+                    {
+                        for(OrgData OG : L1)
+                        {
+                            if(OG.equals(ED.getOrganizationDetails()))
+                                return OG ;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null ;
+    }
+
+    public final Set<String> getValues(String id, char c)
     {
         Set<String> S = new HashSet<>();
         String H ;
@@ -31,7 +103,7 @@ public interface ExtraFunctions
         return S ;
     }
 
-    static boolean checkCase(String S1, String S2)
+    public final boolean checkCase(String S1, String S2)
     {
         int i = 0 ;
         if(S1==null || S2 == null)
@@ -47,7 +119,7 @@ public interface ExtraFunctions
         return true ;
     }
 
-    static List<EmployeeData> getPropertyData(List<EmployeeData> L, String property)
+    public final List<EmployeeData> getPropertyData(List<EmployeeData> L, String property)
     {
         String[] setValues = new String[columnNames.length];
         Set<String> propertyValues = getValues(property,',');
@@ -64,7 +136,7 @@ public interface ExtraFunctions
                 j = 0 ;
                 for(String cn : columnNames)
                 {
-                    if(ExtraFunctions.checkCase(pr,cn))
+                    if(checkCase(pr,cn))
                     {
                         if(j==0)
                             setValues[j] = ED.getName();
@@ -96,7 +168,7 @@ public interface ExtraFunctions
         return L ;
     }
 
-    static AssetsData checkAssetsValidity(AssetsData assetsData, AssetsRepo assetsRepo)
+    public final AssetsData checkAssetsValidity(AssetsData assetsData)
     {
     	boolean b = true ;
 
@@ -161,7 +233,7 @@ public interface ExtraFunctions
         return assetsData ;
     }
 
-    static EmployeeData checkEmployeeValidity(EmployeeData employeeData, EmployeeRepo employeeRepo)
+    public final EmployeeData checkEmployeeValidity(EmployeeData employeeData)
     {
         int i ; boolean b = true ;
 

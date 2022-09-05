@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.Set;
 
 @Service
-public class BasicImpl implements BasicServices,ExtraFunctions
+public class BasicImpl implements BasicServices
 {
 	@Autowired
 	private EmployeeRepo employeeRepo ;
@@ -30,46 +30,16 @@ public class BasicImpl implements BasicServices,ExtraFunctions
 	@Autowired
 	private OrgRepo orgRepo ;
 
-	public BasicImpl(BasicAuthRepository basicAuthRepository, OrgRepo orgRepo,
-		             EmployeeRepo employeeRepo, AssetsRepo assetsRepo)
-	{
-		this.basicAuthRepository = basicAuthRepository ;
-		this.orgRepo = orgRepo ;
-		this.employeeRepo = employeeRepo ;
-		this.assetsRepo = assetsRepo ;
-	}
+	@Autowired
+	private ExtraFunctions EF ;
 
+	@Autowired
+    private PasswordEncoder passwordEncoder ;
+	
     @Override
     public OrgData getOrgData()
 	{
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		List<BasicAuth> L0 = basicAuthRepository.findAll();
-		for(BasicAuth BA : L0)
-		{
-			if(BA.getEmail().equals(auth.getName()))
-			{
-				List<OrgData> L1 = orgRepo.findAll();
-				for(OrgData OG : L1)
-				{
-					if(OG.getOrgId().equals(BA.getUserId()))
-						return OG ;
-				}
-				List<EmployeeData> L2 = employeeRepo.findAll();
-				for(EmployeeData ED : L2)
-				{
-					if(ED.getEmployeeId().equals(BA.getUserId()))
-					{
-						for(OrgData OG : L1)
-						{
-							if(OG.equals(ED.getOrganizationDetails()))
-								return OG ;
-						}
-					}
-				}
-			}
-		}
-
-		return null ;
+		return EF.getOrgData();
 	}
 
 	@Override
@@ -93,7 +63,7 @@ public class BasicImpl implements BasicServices,ExtraFunctions
         if(basicAuth.getPassword()==null || basicAuth.getPassword().length()==0)
             basicAuth.setPassword(BA.getPassword());
         else
-            BA.setPassword(passwordEncoder().encode(basicAuth.getPassword()));
+            BA.setPassword(passwordEncoder.encode(basicAuth.getPassword()));
 
         return basicAuthRepository.save(BA);
 	}
@@ -101,7 +71,7 @@ public class BasicImpl implements BasicServices,ExtraFunctions
 	@Override
     public List<AssetsData> getAssetsData(String id)
     {
-        Set<String> S = ExtraFunctions.getValues(id,',');
+        Set<String> S = EF.getValues(id,',');
         List<AssetsData> L = new ArrayList<AssetsData> ();
         for(String str : S)
         {
@@ -110,7 +80,7 @@ public class BasicImpl implements BasicServices,ExtraFunctions
 	        	List<AssetsData> L0 = assetsRepo.findAll();
 	        	for(AssetsData A : L0)
 	        	{
-	        		if(A.getOrganizationDetails().equals(getOrgData()))
+	        		if(A.getOrganizationDetails().equals(EF.getOrgData()))
 	        			L.add(A);
 	        	}
 	        	return L ;
@@ -123,7 +93,7 @@ public class BasicImpl implements BasicServices,ExtraFunctions
 	        try
 	        {
 	            AD = assetsRepo.findById(str).orElseThrow(Exception::new);
-	            if(!(AD.getOrganizationDetails().equals(getOrgData())))
+	            if(!(AD.getOrganizationDetails().equals(EF.getOrgData())))
 	            	throw new Exception();
 	        }
 
@@ -156,10 +126,5 @@ public class BasicImpl implements BasicServices,ExtraFunctions
             }
         }
         return null ;
-    }
-
-    public PasswordEncoder passwordEncoder()
-    {
-        return new BCryptPasswordEncoder();
     }
 }

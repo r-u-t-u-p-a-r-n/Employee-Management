@@ -36,6 +36,5 @@ public class EmployeeData
 	private String role ;
 
 	@ManyToOne
-	@JoinColumn
 	private OrgData organizationDetails ;
 }
