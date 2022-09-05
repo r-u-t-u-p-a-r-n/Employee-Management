@@ -43,7 +43,7 @@ public class BasicController
         return basicServices.getLoginInfo();
     }
 
-    @GetMapping("/update")
+    @PutMapping("/update")
     public BasicAuth updateLoginInfo(@RequestBody BasicAuth basicAuth)
     {
         return basicServices.updateLoginInfo(basicAuth);
